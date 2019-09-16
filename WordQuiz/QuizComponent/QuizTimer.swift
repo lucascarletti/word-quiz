@@ -2,38 +2,44 @@ import Foundation
 import UIKit
 
 class QuizTimer {
-    
-    var displayLink: CADisplayLink?
+    private var displayLink: CADisplayLink?
     private var quizStartDate = Date()
-    private var fiveMinutes = Date(timeInterval: 5 * 60, since: Date())
     
-    var onUpdateMinutesAndSeconds: ((Int, Int) -> Void)?
+    private var dateLimit: Date
+    private let timeLimit: TimeInterval
+    
+    var onUpdateTimer: ((Int, Int) -> Void)?
     var onTimerFinished: (() -> Void)?
     
-    func initTimer() {
+    init(timeLimit: TimeInterval) {
+        self.timeLimit = timeLimit
+        self.dateLimit = Date().addingTimeInterval(timeLimit)
+    }
+    
+    func startTimer() {
         displayLink = CADisplayLink(target: self, selector: #selector(timer))
         displayLink?.add(to: RunLoop.main, forMode: RunLoop.Mode.default)
         quizStartDate = Date()
-        fiveMinutes = Date(timeInterval: 5 * 60, since: Date())
+        dateLimit = Date().addingTimeInterval(timeLimit)
     }
     
-    @objc func timer() {
-        let difference = quizStartDate.timeIntervalSinceNow
-        let newDate = fiveMinutes.addingTimeInterval(difference)
-        let timeInterval = newDate.timeIntervalSinceNow
-        let minutes = Int(timeInterval / 60)
-        let seconds = Int(60 + difference)
-        debugPrint("Diff: \(difference)")
-        debugPrint("Time: \(timeInterval)")
-        debugPrint("Min: \(minutes)")
-        debugPrint("Sec: \(seconds)")
-        
-        onUpdateMinutesAndSeconds?(minutes,seconds)
-        if Date() > fiveMinutes {
-            onTimerFinished?()
-            displayLink?.invalidate()
+    func stopTimer() {
+        displayLink?.invalidate()
+    }
+    
+    @objc private func timer() {
+        let diffTimeInterval = quizStartDate.timeIntervalSinceNow
+        let difference = timeLimit + diffTimeInterval
+        let minutes = Int(difference / 60)
+        let seconds = Int(difference) % 60
+        if seconds == 60 {
+            onUpdateTimer?(minutes,0)
+        } else {
+            onUpdateTimer?(minutes,seconds)
         }
-        
-        debugPrint("---- Date: \(Date())")
+        if Date() > dateLimit {
+            onTimerFinished?()
+            stopTimer()
+        }
     }
 }
