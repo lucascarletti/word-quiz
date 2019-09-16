@@ -41,14 +41,7 @@ class QuizViewController: UIViewController {
     }
     
     @IBOutlet var bottomViewConstraint: NSLayoutConstraint!
-    
-    var state: QuizState? {
-        didSet {
-            guard let state = state else { return }
-            refreshQuizState(from: state)
-        }
-    }
-    
+        
     //MARK: - Class Variables
     
     private var viewModel: QuizViewModel? = {
@@ -66,8 +59,9 @@ class QuizViewController: UIViewController {
     }
     
     func setup() {
-        self.state = .stopped
-        self.mainContentView.alpha = 0
+        viewModel?.quizStateUpdated(newState: .stopped)
+        
+        mainContentView.alpha = 0
         setQuizManagerButtonTitle(fromState: .stopped)
         
         registerForKeyboardNotifications()
@@ -96,37 +90,29 @@ class QuizViewController: UIViewController {
             self?.wordsTextField.text = ""
         }
         
-    }
-    
-    func refreshQuizState(from state: QuizState) {
-        setQuizManagerButtonTitle(fromState: state)
-        switch state {
-        case .runing:
-            setRuningState()
-            
-        case .stopped:
-            setStoppedState()
+        viewModel?.onQuizStopped = { [weak self] in
+            self?.hittenWordsDataSource?.removeAll()
+            self?.tableView.reloadData()
+            self?.wordsTextField.resignFirstResponder()
+            self?.wordsTextField.text = ""
+            self?.setProgressWith(current: 0, andLimitOf: 50)
+            self?.stateManagerButton.setTitle("Start", for: .normal)
         }
+        
+        viewModel?.onQuizStart = { [weak self] in
+            self?.stateManagerButton.setTitle("Reset", for: .normal)
+        }
+        
     }
     
     @IBAction func didTouchStateManagerButton(_ sender: Any) {
-        guard let state = state else { return }
-        switch state {
-        case .runing:
-            self.state = .stopped
-        case .stopped:
-            self.state = .runing
-        }
+        self.viewModel?.didTouchStateManagerButton()
     }
 }
 
 //MARK: - TextField Delegate and Methods
 extension QuizViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if self.state == .stopped {
-            setStoppedState()
-            return false
-        }
         
         if let text = textField.text, let textRange = Range(range, in: text) {
             let updatedText = text.replacingCharacters(in: textRange, with: string)
@@ -136,7 +122,7 @@ extension QuizViewController: UITextFieldDelegate {
     }
     
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        return self.state == .runing
+        return self.viewModel?.state == .runing
     }
 }
 
@@ -217,40 +203,10 @@ extension QuizViewController {
 
 //MARK: - Timer Progress Management
 
-//MARK: - Reset/Start Button Management
-
-extension QuizViewController {
-    func setQuizManagerButtonTitle(fromState state: QuizState) {
-        var buttonTitle: String?
-        
-        switch state {
-        case .runing:
-            buttonTitle = "Reset"
-        case .stopped:
-            buttonTitle = "Start"
-        }
-        
-        guard let btnTitle = buttonTitle else { return }
-
-        stateManagerButton.setTitle(btnTitle, for: .normal)
-    }
-}
 
 //MARK: - Quiz State Manager
 
 extension QuizViewController {
-    func setStoppedState() {
-        self.hittenWordsDataSource?.removeAll()
-        self.tableView.reloadData()
-        self.wordsTextField.resignFirstResponder()
-        self.wordsTextField.text = ""
-        self.setProgressWith(current: 0, andLimitOf: 50)
-    }
-    
-    func setRuningState() {
-        
-    }
-    
     func setSuccessfullFinishState() {
         
     }

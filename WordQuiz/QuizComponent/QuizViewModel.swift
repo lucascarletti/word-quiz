@@ -3,6 +3,8 @@ import UIKit
 
 class QuizViewModel {
     
+    var timer: QuizTimer?
+    
     var onQuizRefreshed: ((Quiz) -> Void)?
     var onRestartQuiz: (() -> Void)?
     var onHittenWord: ((String, [String]?) -> Void)?
@@ -10,25 +12,23 @@ class QuizViewModel {
     var onSuccessFinish: ((String) -> Void)?
     var onFailureFinish: ((String) -> Void)?
     
+    var onQuizStart: (() -> Void)?
+    var onQuizStopped: (() -> Void)?
+    
     var onInformationFailed: ((String?) -> Void)?
+
+    private(set) var state: QuizState? {
+        didSet {
+            guard let state = state else { return }
+            quizStateUpdated(newState: state)
+        }
+    }
 
     private(set) var wordsDataSource: [String]? = {
         return [String]()
     }()
     
     private(set) var hittenWord = [String]()
-    
-    func didUpdateTextFieldText(withText text: String) {
-        let hitten = self.hasHittenWord(withText: text)
-        if hitten {
-            onHittenWord?(text, wordsDataSource)
-        }
-        debugPrint(hitten)
-    }
-    
-    func hasHittenWord(withText text: String) -> Bool {
-        return wordsDataSource?.contains(text) ?? false
-    }
     
     func initialize() {
         getQuiz { [weak self] quiz, errorMessage in
@@ -42,6 +42,45 @@ class QuizViewModel {
         }
     }
     
+    func didUpdateTextFieldText(withText text: String) {
+        let hitten = self.hasHittenWord(withText: text)
+        if hitten {
+            onHittenWord?(text, wordsDataSource)
+        }
+    }
+    
+    func hasHittenWord(withText text: String) -> Bool {
+        return wordsDataSource?.contains(text) ?? false
+    }
+    
+    func quizStateUpdated(newState state: QuizState) {
+        switch state {
+        case .runing:
+            onQuizStart?()
+        
+        case .stopped:
+            onQuizStopped?()
+            
+        }
+    }
+    
+    func didTouchStateManagerButton() {
+        if let state = state {
+            switch state {
+            case .runing:
+                self.state = .stopped
+            case .stopped:
+                self.state = .runing
+            }
+        } else {
+            //this case means that state has not yet initialized, as it starts in a "stopped" state, we can start runing quiz once it's nil and hitted
+            self.state = .runing
+        }
+    }
+}
+
+//MARK: - Network Management
+extension QuizViewModel {
     // MARK: - Request Quiz from API
     // current index has default value 1 as we only have a single quiz on our API
     func getQuiz(ofIndex index: Int = 1, completion: @escaping (_ quiz: Quiz?, _ error: String?) -> ()) {
@@ -65,38 +104,5 @@ class QuizViewModel {
                 completion(nil, NetworkResponse.noData.rawValue)
             }
         }
-    }
-}
-
-class QuizTimer {
-    var displayLink: CADisplayLink?
-    
-    func initTimer() {
-        displayLink = CADisplayLink(target: self, selector: #selector(timer))
-        displayLink?.add(to: RunLoop.main, forMode: RunLoop.Mode.default)
-    }
-    
-    let quizStartDate = Date()
-    let fiveMinutes = Date(timeInterval: 5 * 60, since: Date())
-    
-    var onTimerUpdate: ((/*???*/) -> Void)?
-
-    @objc func timer() {
-        let difference = quizStartDate.timeIntervalSinceNow
-        let newDate = fiveMinutes.addingTimeInterval(difference)
-        let timeInterval = newDate.timeIntervalSinceNow
-        let minutes = Int(timeInterval / 60)
-        let seconds = Int(60 + difference)
-        debugPrint("Diff: \(difference)")
-        debugPrint("Time: \(timeInterval)")
-        debugPrint("Min: \(minutes)")
-        debugPrint("Sec: \(seconds)")
-        
-        if Date() > fiveMinutes {
-            debugPrint("Logica de terminar o timer")
-            displayLink?.invalidate()
-        }
-        
-        debugPrint("---- Date: \(Date())")
     }
 }
