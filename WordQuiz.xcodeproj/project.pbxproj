@@ -30,6 +30,9 @@
 		BA7DA399232E958D0092459B /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7DA398232E958D0092459B /* UIView+Extension.swift */; };
 		BA7DA39B232F410E0092459B /* UIViewController+AlertViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7DA39A232F410E0092459B /* UIViewController+AlertViewExtension.swift */; };
 		BA7DA39D232FB9FB0092459B /* QuizTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7DA39C232FB9FB0092459B /* QuizTimer.swift */; };
+		BA7DA3A0232FF6CB0092459B /* QuizService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7DA39F232FF6CB0092459B /* QuizService.swift */; };
+		BAA7BF4E23302EE600306705 /* AlertControllerBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA7BF4D23302EE600306705 /* AlertControllerBuilder.swift */; };
+		BAA7BF512330385100306705 /* LoaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA7BF502330385100306705 /* LoaderViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +82,9 @@
 		BA7DA398232E958D0092459B /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		BA7DA39A232F410E0092459B /* UIViewController+AlertViewExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+AlertViewExtension.swift"; sourceTree = "<group>"; };
 		BA7DA39C232FB9FB0092459B /* QuizTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizTimer.swift; sourceTree = "<group>"; };
+		BA7DA39F232FF6CB0092459B /* QuizService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizService.swift; sourceTree = "<group>"; };
+		BAA7BF4D23302EE600306705 /* AlertControllerBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertControllerBuilder.swift; sourceTree = "<group>"; };
+		BAA7BF502330385100306705 /* LoaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoaderViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +163,7 @@
 		BA7DA368232D3F520092459B /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				BAA7BF4F23302EEC00306705 /* Helpers */,
 				BA7DA397232E90B90092459B /* Extensions */,
 				BA7DA33A232B17370092459B /* AppDelegate.swift */,
 				BA7DA343232B17380092459B /* LaunchScreen.storyboard */,
@@ -218,6 +225,7 @@
 			isa = PBXGroup;
 			children = (
 				BA7DA393232DDB030092459B /* QuizEndPoint.swift */,
+				BA7DA39F232FF6CB0092459B /* QuizService.swift */,
 			);
 			path = Endpoint;
 			sourceTree = "<group>";
@@ -259,6 +267,15 @@
 				BA7DA39A232F410E0092459B /* UIViewController+AlertViewExtension.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		BAA7BF4F23302EEC00306705 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				BAA7BF4D23302EE600306705 /* AlertControllerBuilder.swift */,
+				BAA7BF502330385100306705 /* LoaderViewController.swift */,
+			);
+			path = Helpers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -393,14 +410,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				BA7DA396232DE4D70092459B /* NetworkManager.swift in Sources */,
+				BA7DA3A0232FF6CB0092459B /* QuizService.swift in Sources */,
 				BA7DA38A232DC7B40092459B /* ParameterEncoding.swift in Sources */,
 				BA7DA36C232D522E0092459B /* QuizViewController.swift in Sources */,
+				BAA7BF512330385100306705 /* LoaderViewController.swift in Sources */,
 				BA7DA38C232DC9480092459B /* URLParameterEncoding.swift in Sources */,
 				BA7DA39D232FB9FB0092459B /* QuizTimer.swift in Sources */,
 				BA7DA370232D52990092459B /* QuizViewModel.swift in Sources */,
 				BA7DA388232DC6BA0092459B /* HTTPTask.swift in Sources */,
 				BA7DA38E232DCB500092459B /* JSONParameterEncoder.swift in Sources */,
 				BA7DA383232DC4AC0092459B /* EndPointType.swift in Sources */,
+				BAA7BF4E23302EE600306705 /* AlertControllerBuilder.swift in Sources */,
 				BA7DA392232DD2590092459B /* Router.swift in Sources */,
 				BA7DA377232D58370092459B /* Quiz.swift in Sources */,
 				BA7DA399232E958D0092459B /* UIView+Extension.swift in Sources */,
@@ -515,7 +535,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -570,7 +590,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -587,6 +607,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9EBY79876D;
 				INFOPLIST_FILE = "$(SRCROOT)/WordQuiz/Resources/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -605,6 +626,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9EBY79876D;
 				INFOPLIST_FILE = "$(SRCROOT)/WordQuiz/Resources/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
