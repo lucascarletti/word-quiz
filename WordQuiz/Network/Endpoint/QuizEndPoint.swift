@@ -1,9 +1,7 @@
 import Foundation
 
 public enum QuizEndPoint {
-    case getQuestion(ofIndex: Int)
-    
-    static let router = Router<QuizEndPoint>()
+    case questions(ofIndex: Int)
 }
 
 extension QuizEndPoint: EndPointType {
@@ -14,21 +12,21 @@ extension QuizEndPoint: EndPointType {
     
     var path: String {
         switch self {
-        case .getQuestion(let index):
+        case .questions(let index):
             return "/quiz/\(index)"
         }
     }
     
     var httpMethod: HTTPMethod {
         switch self {
-        case .getQuestion:
+        case .questions:
             return .get
         }
     }
     
     var task: HTTPTask {
         switch self {
-        case .getQuestion:
+        case .questions:
             return .request
         }
     }

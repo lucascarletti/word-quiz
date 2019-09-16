@@ -1,9 +1,9 @@
 import Foundation
 
-class Router<EndPoint: EndPointType>: NetworkRouter {
+class Router: NetworkRouter {
     private var task: URLSessionTask?
     
-    func request(_ route: EndPoint, completion: @escaping NetworkRouterCompletion) {
+    func request(_ route: EndPointType, completion: @escaping NetworkRouterCompletion) {
         let session = URLSession.shared
         do {
             let request = try self.buildRequest(from: route)
@@ -22,13 +22,13 @@ class Router<EndPoint: EndPointType>: NetworkRouter {
 }
 
 extension Router {
-    func buildRequest(from route: EndPoint) throws -> URLRequest {
+    func buildRequest(from route: EndPointType) throws -> URLRequest {
         var request = URLRequest(url: route.baseURL.appendingPathComponent(route.path),
                                  cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
                                  timeoutInterval: 8.0)
         
         request.httpMethod = route.httpMethod.rawValue
-        
+
         do {
             switch route.task {
             case .request:
