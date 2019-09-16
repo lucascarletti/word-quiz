@@ -1,34 +1,119 @@
-//
-//  WordQuizTests.swift
-//  WordQuizTests
-//
-//  Created by Lucas Teixeira Carletti on 12/09/2019.
-//  Copyright © 2019 arctouch. All rights reserved.
-//
-
 import XCTest
 @testable import WordQuiz
 
 class WordQuizTests: XCTestCase {
-
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+//MARK: - Successfull tests
+    func testInitialState() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        XCTAssertTrue(viewModel.hittenWords.count == 0)
+        XCTAssertTrue(viewModel.wordsDataSource.count == 0)
+        XCTAssertTrue(viewModel.state == nil)
+    }
+    
+    func testRunningState() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        
+        viewModel.shouldChangeQuizState()
+        XCTAssertTrue(viewModel.state == .running)
+    }
+    
+    func testStoppedState() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        
+        viewModel.shouldChangeQuizState()
+        viewModel.shouldChangeQuizState()
+        XCTAssertTrue(viewModel.state == .stopped)
+    }
+    
+    func testHittingWord() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        viewModel.didUpdateTextField(withText: "case")
+        XCTAssertTrue(viewModel.hittenWords.contains("case"))
+        XCTAssertTrue(viewModel.hittenWords.count == 1)
+    }
+    
+    func testHittingRepeatedWord() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        viewModel.didUpdateTextField(withText: "case")
+        viewModel.didUpdateTextField(withText: "case")
+        viewModel.didUpdateTextField(withText: "case")
+        XCTAssertTrue(viewModel.hittenWords.contains("case"))
+        XCTAssertTrue(viewModel.hittenWords.count == 1)
+    }
+    
+    func testHittingTwoWords() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        viewModel.didUpdateTextField(withText: "byte")
+        viewModel.didUpdateTextField(withText: "case")
+        XCTAssertTrue(viewModel.hittenWords.count == 2)
+    }
+    
+    func testDataSourceCount() {
+        let validationSource = ["abstract",
+                                "assert",
+                                "boolean",
+                                "break",
+                                "byte",
+                                "case"]
+        
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        XCTAssertTrue(viewModel.wordsDataSource.count == validationSource.count)
     }
 
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    func testShouldAllowReplacement() {
+        let dataMock = DataMockSuccess()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        viewModel.didUpdateTextField(withText: "case")
+        XCTAssertTrue(viewModel.shouldAllowTextFieldReplacementString(fromText: "case"))
     }
 
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testDataSourceStateFailure() {
+        let dataMock = DataMockFailure()
+        let viewModel = QuizViewModel(service: dataMock)
+        viewModel.initialize()
+        
+        XCTAssertTrue(viewModel.hittenWords.isEmpty)
+        XCTAssertTrue(viewModel.wordsDataSource.isEmpty)
+        XCTAssertTrue(viewModel.state == nil)
     }
+}
 
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+struct DataMockSuccess: QuizServiceProtocol {
+    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
+        let q = Quiz()
+        
+        q.answer = ["abstract",
+                    "assert",
+                    "boolean",
+                    "break",
+                    "byte",
+                    "case"]
+        
+        q.question = "What are all the answers in java?"
+        
+        completion?(q, nil)
     }
+}
 
+struct DataMockFailure: QuizServiceProtocol {
+    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
+        completion?(nil, "Something Went Wrong")
+    }
 }
