@@ -96,7 +96,7 @@ class WordQuizTests: XCTestCase {
 }
 
 struct DataMockSuccess: QuizServiceProtocol {
-    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
+    func getQuestions(endPoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
         let q = Quiz()
         
         q.answer = ["abstract",
@@ -113,7 +113,7 @@ struct DataMockSuccess: QuizServiceProtocol {
 }
 
 struct DataMockFailure: QuizServiceProtocol {
-    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
+    func getQuestions(endPoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
         completion?(nil, "Something Went Wrong")
     }
 }
