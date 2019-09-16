@@ -15,7 +15,6 @@ struct AlertMessageModel {
 
 class QuizViewModel {
     
-    /// when quiz is received from API
     var onInformationChanged: ((String?, [String]) -> Void)?
     var onInformationFailed: ((AlertMessageModel) -> Void)?
 
@@ -47,8 +46,8 @@ class QuizViewModel {
     // MARK : - Public methods
     func initialize() {
         // NOTE: Current index has default value 1 as we only have a single quiz on our API
-        let endpoint = QuizEndPoint.questions(ofIndex: 1)
-        service.getQuestions(endpoint: endpoint) { [weak self] quiz, errorMessage in
+        let endPoint = QuizEndPoint.questions(ofIndex: 1)
+        service.getQuestions(endPoint: endPoint) { [weak self] quiz, errorMessage in
             if let errorMessage = errorMessage {
                 self?.onInformationFailed?(AlertMessageModel(title: "Ops",
                                                              message: errorMessage,
@@ -56,7 +55,6 @@ class QuizViewModel {
             } else if let quiz = quiz, let answer = quiz.answer {
                 self?.wordsDataSource = answer
                 self?.onInformationChanged?(quiz.question, answer)
-                //todo: on success, remove loader spinning, update tableView and let user start
             } else {
                 self?.onInformationFailed?(AlertMessageModel(title: "Ops",
                                                              message: "Something went wrong",
@@ -93,7 +91,7 @@ class QuizViewModel {
                 self.state = .running
             }
         } else {
-            //this else case means that, state has not yet initialized, as it starts in a "stopped" state, we can start running quiz once it's nil and hitted
+            //NOTE: This else case means that, state has not yet initialized, as it starts in a "stopped" state, we can start running quiz once it's nil and hitted
             self.state = .running
         }
     }
@@ -104,7 +102,7 @@ class QuizViewModel {
         
         let alertModel = AlertMessageModel(title: "Time finished!",
                                            message: "Sorry! Time is up. You got \(hitten) out of \(total)",
-            buttonTitle: "Try Again")
+                                           buttonTitle: "Try Again")
         onFailureFinish?(alertModel)
     }
     

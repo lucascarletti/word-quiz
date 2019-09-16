@@ -1,14 +1,14 @@
 import Foundation
 
 protocol QuizServiceProtocol {
-    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?)
+    func getQuestions(endPoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?)
 }
 
 struct QuizService: QuizServiceProtocol {
     private let router = Router()
     
-    func getQuestions(endpoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
-        router.request(endpoint) { (data, response, error) in
+    func getQuestions(endPoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
+        router.request(endPoint) { (data, response, error) in
             if error != nil {
                 completion?(nil, NetworkResponse.connectionError.rawValue)
             } else if let httpResponse = response as? HTTPURLResponse, let data = data {

@@ -8,6 +8,11 @@ protocol CellIdentifier {
 class WordTableViewCell: UITableViewCell {
     @IBOutlet var wordLabel: UILabel!
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        wordLabel.text = nil
+    }
+    
     func setWord(fromText text: String?) {
         wordLabel.text = text
     }
@@ -15,8 +20,6 @@ class WordTableViewCell: UITableViewCell {
 
 extension WordTableViewCell: CellIdentifier {
     static var cellIdentifier: String {
-        get {
-            return "WordTableViewCellIdentifier"
-        }
+        return "WordTableViewCellIdentifier"
     }
 }

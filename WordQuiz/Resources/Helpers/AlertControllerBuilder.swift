@@ -1,19 +1,18 @@
 import UIKit
 
-class AlertControllerBuilder: NSObject {
+protocol LoadingProtocol {
+    func startLoading()
+    func stopLoading()
+}
+
+class LoadingBuilder: NSObject {
     
     @objc private dynamic var alertWindow: UIWindow?
     
-    private var title: String?
     private var message: String? = "Loading...\n\n"
     private var viewController: UIViewController?
     
-    func title(_ title: String?) -> AlertControllerBuilder {
-        self.title = title
-        return self
-    }
-    
-    func message(_ message: String?) -> AlertControllerBuilder {
+    func message(_ message: String?) -> LoadingBuilder {
         self.message = message
         return self
     }
@@ -47,22 +46,16 @@ class AlertControllerBuilder: NSObject {
         alertWindow = nil
     }
 }
-extension AlertControllerBuilder: LoadingProtocol {
+
+extension LoadingBuilder: LoadingProtocol {
     func startLoading() {
-        // Show loading
         DispatchQueue.main.async {
             self.show()
         }
     }
     func stopLoading() {
-        // Remove Loading
         DispatchQueue.main.async {
             self.hide()
         }
     }
-}
-
-protocol LoadingProtocol {
-    func startLoading()
-    func stopLoading()
 }

@@ -45,7 +45,7 @@ class QuizViewController: UIViewController {
         
     //MARK: - Class Variables
     fileprivate lazy var loadingBuilder: LoadingProtocol = {
-        let loadingView = AlertControllerBuilder()
+        let loadingView = LoadingBuilder()
         return loadingView
     }()
     
@@ -62,21 +62,21 @@ class QuizViewController: UIViewController {
     }
     
     private func setup() {
-        loadingBuilder.startLoading()
         mainContentView.alpha = 0
         
         registerForKeyboardNotifications()
         registerViewModelCallBacks()
         setupTimer()
         
+        loadingBuilder.startLoading()
         viewModel?.initialize()
     }
 
     private func registerViewModelCallBacks() {
-        viewModel?.onInformationChanged = { [weak self] (questionTitle, word) in
+        viewModel?.onInformationChanged = { [weak self] (questionTitle, words) in
             DispatchQueue.main.async {
                 self?.questionTitleLabel.text = questionTitle
-                self?.setProgressWith(current: 0, andLimitOf: word.count)
+                self?.setProgressWith(current: 0, andLimitOf: words.count)
                 self?.mainContentView.alpha = 1
                 self?.loadingBuilder.stopLoading()
             }
@@ -122,7 +122,7 @@ class QuizViewController: UIViewController {
         }
         
         viewModel?.onFailureFinish = { [weak self] alertInfo in
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 self?.wordsTextField.resignFirstResponder()
                 self?.showAlert(fromInfo: alertInfo) {
                     self?.viewModel?.shouldChangeQuizState()
@@ -133,16 +133,18 @@ class QuizViewController: UIViewController {
     
     private func setupTimer() {
         timer.onUpdateTimer = { [weak self] (minutes, seconds) in
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 self?.setTimer(withMinutes: minutes, andSeconds: seconds)
             }
         }
         
         timer.onTimerFinished = { [weak self] in
-            self?.viewModel?.timerDidEnd()
+            DispatchQueue.main.async {
+                self?.viewModel?.timerDidEnd()
+            }
         }
         
-        self.setTimer(withMinutes: Int(QuizViewController.timeInMinutes), andSeconds: 0)
+        setTimer(withMinutes: Int(QuizViewController.timeInMinutes), andSeconds: 0)
     }
 
     @IBAction func didTouchStateManagerButton(_ sender: Any) {
@@ -162,8 +164,8 @@ class QuizViewController: UIViewController {
         wordsTextField.text = ""
         setProgressWith(current: 0, andLimitOf: limit)
         stateManagerButton.setTitle("Start", for: .normal)
-        setTimer(withMinutes: Int(QuizViewController.timeInMinutes), andSeconds: 0)
         timer.stopTimer()
+        setTimer(withMinutes: Int(QuizViewController.timeInMinutes), andSeconds: 0)
     }
     
     private func startTimer() {
@@ -223,10 +225,6 @@ extension QuizViewController: UITableViewDataSource {
 
 //MARK: - TableView Delegate
 extension QuizViewController: UITableViewDelegate {
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         return UIView()
     }

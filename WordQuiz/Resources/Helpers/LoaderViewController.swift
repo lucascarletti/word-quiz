@@ -2,14 +2,13 @@ import Foundation
 import UIKit
 
 class LoaderViewController: UIViewController {
-    
     fileprivate var message: String?
     
-    @IBOutlet var textLabel: UILabel!
+    @IBOutlet weak var textLabel: UILabel!
     
-    @IBOutlet var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    @IBOutlet var spinnerView: UIView! {
+    @IBOutlet weak var spinnerView: UIView! {
         didSet {
             spinnerView.cornerRadius = 8
         }
