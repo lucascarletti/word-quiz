@@ -1,9 +1,26 @@
-//
-//  LoaderViewController.swift
-//  WordQuiz
-//
-//  Created by Lucas Teixeira Carletti on 16/09/2019.
-//  Copyright © 2019 arctouch. All rights reserved.
-//
-
 import Foundation
+import UIKit
+
+class LoaderViewController: UIViewController {
+    
+    fileprivate var message: String?
+    
+    @IBOutlet var textLabel: UILabel!
+    
+    @IBOutlet var activityIndicator: UIActivityIndicatorView!
+    
+    @IBOutlet var spinnerView: UIView! {
+        didSet {
+            spinnerView.cornerRadius = 8
+        }
+    }
+    
+    func setup(message: String?) {
+        self.message = message
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        textLabel.text = message
+    }
+}
