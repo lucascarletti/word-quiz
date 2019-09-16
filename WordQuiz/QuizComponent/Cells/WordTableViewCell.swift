@@ -8,12 +8,8 @@ protocol CellIdentifier {
 class WordTableViewCell: UITableViewCell {
     @IBOutlet var wordLabel: UILabel!
     
-    func setWord(fromText text: String) {
+    func setWord(fromText text: String?) {
         wordLabel.text = text
-    }
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
     }
 }
 
