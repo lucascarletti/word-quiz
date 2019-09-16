@@ -59,14 +59,12 @@ class QuizViewController: UIViewController {
     }
     
     func setup() {
-        viewModel?.quizStateUpdated(newState: .stopped)
-        
         mainContentView.alpha = 0
-        setQuizManagerButtonTitle(fromState: .stopped)
         
         registerForKeyboardNotifications()
         registerViewModelCallBacks()
         
+        viewModel?.quizStateUpdated(newState: .stopped)
         viewModel?.initialize()
     }
 
@@ -103,10 +101,25 @@ class QuizViewController: UIViewController {
             self?.stateManagerButton.setTitle("Reset", for: .normal)
         }
         
+        viewModel?.onSuccessFinish = { [weak self] alertInfo in
+            self?.wordsTextField.resignFirstResponder()
+            
+            self?.showAlert(fromInfo: alertInfo) {
+                self?.viewModel?.shouldChangeQuizState()
+
+            }
+        }
+        
+        viewModel?.onFailureFinish = { [weak self] alertInfo in
+            self?.wordsTextField.resignFirstResponder()
+            self?.showAlert(fromInfo: alertInfo) {
+                self?.viewModel?.quizStateUpdated(newState: .stopped)
+            }
+        }
     }
     
     @IBAction func didTouchStateManagerButton(_ sender: Any) {
-        self.viewModel?.didTouchStateManagerButton()
+        self.viewModel?.shouldChangeQuizState()
     }
 }
 
@@ -116,8 +129,12 @@ extension QuizViewController: UITextFieldDelegate {
         
         if let text = textField.text, let textRange = Range(range, in: text) {
             let updatedText = text.replacingCharacters(in: textRange, with: string)
+            let shouldReplace = viewModel?.shouldAllowTextFieldReplacementString(fromText: updatedText) ?? true
+            
             viewModel?.didUpdateTextFieldText(withText: updatedText)
+            return shouldReplace
         }
+        
         return true
     }
     

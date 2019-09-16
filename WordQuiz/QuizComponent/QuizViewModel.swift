@@ -1,6 +1,18 @@
 import Foundation
 import UIKit
 
+struct AlertMessageModel {
+    let title: String
+    let message: String
+    let buttonTitle: String
+    
+    init(title: String, message: String, buttonTitle: String) {
+        self.title = title
+        self.message = message
+        self.buttonTitle = buttonTitle
+    }
+}
+
 class QuizViewModel {
     
     var timer: QuizTimer?
@@ -9,8 +21,8 @@ class QuizViewModel {
     var onRestartQuiz: (() -> Void)?
     var onHittenWord: ((String, [String]?) -> Void)?
 
-    var onSuccessFinish: ((String) -> Void)?
-    var onFailureFinish: ((String) -> Void)?
+    var onSuccessFinish: ((AlertMessageModel) -> Void)?
+    var onFailureFinish: ((AlertMessageModel) -> Void)?
     
     var onQuizStart: (() -> Void)?
     var onQuizStopped: (() -> Void)?
@@ -28,7 +40,7 @@ class QuizViewModel {
         return [String]()
     }()
     
-    private(set) var hittenWord = [String]()
+    private(set) var hittenWords = [String]()
     
     func initialize() {
         getQuiz { [weak self] quiz, errorMessage in
@@ -43,10 +55,22 @@ class QuizViewModel {
     }
     
     func didUpdateTextFieldText(withText text: String) {
-        let hitten = self.hasHittenWord(withText: text)
-        if hitten {
+        let hasHittenWord = self.hasHittenWord(withText: text)
+        
+        if hasHittenWord && !hittenWords.contains(text) {
+            hittenWords.append(text)
             onHittenWord?(text, wordsDataSource)
+            validateQuizCompletion()
         }
+    }
+    
+    func shouldAllowTextFieldReplacementString(fromText text: String) -> Bool {
+        let hasHittenWord = self.hasHittenWord(withText: text)
+        if hasHittenWord && !hittenWords.contains(text) {
+            return false
+        }
+        
+        return true
     }
     
     func hasHittenWord(withText text: String) -> Bool {
@@ -59,12 +83,12 @@ class QuizViewModel {
             onQuizStart?()
         
         case .stopped:
+            hittenWords.removeAll()
             onQuizStopped?()
-            
         }
     }
     
-    func didTouchStateManagerButton() {
+    func shouldChangeQuizState() {
         if let state = state {
             switch state {
             case .runing:
@@ -73,9 +97,28 @@ class QuizViewModel {
                 self.state = .runing
             }
         } else {
-            //this case means that state has not yet initialized, as it starts in a "stopped" state, we can start runing quiz once it's nil and hitted
+            //this else case means that, state has not yet initialized, as it starts in a "stopped" state, we can start runing quiz once it's nil and hitted
             self.state = .runing
         }
+    }
+    
+    func validateQuizCompletion() {
+        if hittenWords.count == wordsDataSource?.count {
+            let alertModel = AlertMessageModel(title: "Congratulations",
+                                               message: "Good job! You found all the answers on time. Keep up with great work.",
+                                               buttonTitle: "Play Again")
+            onSuccessFinish?(alertModel)
+        }
+    }
+    
+    func timerDidEnd() {
+        let hitten = hittenWords.count
+        let total = wordsDataSource?.count ?? 0
+        
+        let alertModel = AlertMessageModel(title: "Time finished!",
+                                           message: "Sorry! Time is up. You got \(hitten) out of \(total)",
+                                           buttonTitle: "Try Again")
+        onSuccessFinish?(alertModel)
     }
 }
 

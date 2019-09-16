@@ -2,9 +2,10 @@ import Foundation
 import UIKit
 
 extension UIViewController {
-    func showAlert(withTitle title: String, message: String, buttonTitle: String, onCompletion: (() -> Void)?) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let action = UIAlertAction(title: buttonTitle, style: .default, handler: { action in
+    func showAlert(fromInfo info: AlertMessageModel, onCompletion: (() -> Void)?) {
+        
+        let alert = UIAlertController(title: info.title, message: info.message, preferredStyle: .alert)
+        let action = UIAlertAction(title: info.buttonTitle, style: .default, handler: { action in
             switch action.style {
             case .default:
                 onCompletion?()
