@@ -189,7 +189,6 @@
 				BA7DA371232D56D10092459B /* Cells */,
 				BA7DA36F232D52990092459B /* QuizViewModel.swift */,
 				BA7DA36B232D522E0092459B /* QuizViewController.swift */,
-				BA7DA39C232FB9FB0092459B /* QuizTimer.swift */,
 			);
 			path = QuizComponent;
 			sourceTree = "<group>";
@@ -272,6 +271,7 @@
 		BAA7BF4F23302EEC00306705 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				BA7DA39C232FB9FB0092459B /* QuizTimer.swift */,
 				BAA7BF4D23302EE600306705 /* AlertControllerBuilder.swift */,
 				BAA7BF502330385100306705 /* LoaderViewController.swift */,
 			);
