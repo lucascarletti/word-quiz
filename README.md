@@ -25,14 +25,14 @@ As there are no third part libraries, you can run by just pressing CMD + R in th
 We're curently using the **MVVM - Model View View Model** pattern for our entire architecture.
 
 #### View Controllers:
-Are is used to display data and manage any view related animations/actions/gestures.
+Are is used to display data and manage any view related animations/actions/gestures that will be passed to view model to make decisions of what to do next.
 
 #### View Models
-It is used to provide data to the view and should be able to accomodate the complete view.
-It should not contain networking code or data access code, directity.
+It is used to provide formatted data to the view and should be able to accomodate the complete view.
+It is also where business rule's related methods will be.
 
-##### CallBacks:
-Refers to the flow of information between the views and the view models.
+##### Delegates:
+Using the delegate pattern to communicate information between controller and view model.
 
 ## Authors
 
