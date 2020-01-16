@@ -13,31 +13,33 @@ struct AlertMessageModel {
     }
 }
 
-class QuizViewModel {
+protocol QuizViewModelDelegate: class {
+    func quizUpdated(questionTitle: String?, words: [String]?, error: AlertMessageModel?)
     
-    var onInformationChanged: ((String?, [String]) -> Void)?
-    var onInformationFailed: ((AlertMessageModel) -> Void)?
+    func onHittenWord(hittenWords: [String], words: [String])
+    
+    func startQuiz()
+    func stopQuiz(wordsCount: Int)
+    
+    func quizFinished(alert: AlertMessageModel)
+}
 
-    var onHittenWord: (([String], [String]) -> Void)?
-
-    var onSuccessFinish: ((AlertMessageModel) -> Void)?
-    var onFailureFinish: ((AlertMessageModel) -> Void)?
-
-    var onQuizStart: (() -> Void)?
-    var onQuizStopped: (([String]) -> Void)?
-
-    private(set) var state: QuizState? {
+class QuizViewModel {
+    static let timeInMinutes: TimeInterval = 5
+    
+    private(set) var state: QuizState = .stopped {
         didSet {
-            guard let state = state else { return }
             quizStateUpdated(newState: state)
         }
     }
-
+    
     private(set) var wordsDataSource = [String]()
     
     private(set) var hittenWords = [String]()
     
     private let service: QuizServiceProtocol
+    
+    weak var delegate: QuizViewModelDelegate?
     
     init(service: QuizServiceProtocol = QuizService()) {
         self.service = service
@@ -48,18 +50,7 @@ class QuizViewModel {
         // NOTE: Current index has default value 1 as we only have a single quiz on our API
         let endPoint = QuizEndPoint.questions(ofIndex: 1)
         service.getQuestions(endPoint: endPoint) { [weak self] quiz, errorMessage in
-            if let errorMessage = errorMessage {
-                self?.onInformationFailed?(AlertMessageModel(title: "Ops",
-                                                             message: errorMessage,
-                                                             buttonTitle: "Try Again"))
-            } else if let quiz = quiz, let answer = quiz.answer {
-                self?.wordsDataSource = answer
-                self?.onInformationChanged?(quiz.question, answer)
-            } else {
-                self?.onInformationFailed?(AlertMessageModel(title: "Ops",
-                                                             message: "Something went wrong",
-                                                             buttonTitle: "Try Again"))
-            }
+            self?.handleAPIResponse(quiz: quiz, errorMessage: errorMessage)
         }
     }
     
@@ -68,31 +59,17 @@ class QuizViewModel {
         
         if hasHitten && !hittenWords.contains(text) {
             hittenWords.insert(text, at: 0)
-            onHittenWord?(hittenWords, wordsDataSource)
+            delegate?.onHittenWord(hittenWords: hittenWords, words: wordsDataSource)
             validateQuizCompletion()
         }
     }
     
-    func shouldAllowTextFieldReplacementString(fromText text: String) -> Bool {
-        let hasHitten = hasHittenWord(withText: text)
-        if hasHitten && !hittenWords.contains(text) {
-            return false
-        }
-        
-        return true
-    }
-    
     func shouldChangeQuizState() {
-        if let state = state {
-            switch state {
-            case .running:
-                self.state = .stopped
-            case .stopped:
-                self.state = .running
-            }
-        } else {
-            //NOTE: This else case means that, state has not yet initialized, as it starts in a "stopped" state, we can start running quiz once it's nil and hitted
-            self.state = .running
+        switch state {
+        case .running:
+          self.state = .stopped
+        case .stopped:
+          self.state = .running
         }
     }
     
@@ -103,7 +80,7 @@ class QuizViewModel {
         let alertModel = AlertMessageModel(title: "Time finished!",
                                            message: "Sorry! Time is up. You got \(hitten) out of \(total)",
                                            buttonTitle: "Try Again")
-        onFailureFinish?(alertModel)
+        delegate?.quizFinished(alert: alertModel)
     }
     
     // MARK: - Private methods
@@ -111,14 +88,14 @@ class QuizViewModel {
         return wordsDataSource.contains(text)
     }
     
-    private func quizStateUpdated(newState state: QuizState) {
-        switch state {
+    private func quizStateUpdated(newState: QuizState) {
+        switch newState {
         case .running:
-            onQuizStart?()
+            delegate?.startQuiz()
             
         case .stopped:
             hittenWords.removeAll()
-            onQuizStopped?(wordsDataSource)
+            delegate?.stopQuiz(wordsCount: wordsDataSource.count)
         }
     }
     
@@ -127,7 +104,30 @@ class QuizViewModel {
             let alertModel = AlertMessageModel(title: "Congratulations",
                                                message: "Good job! You found all the answers on time. Keep up with great work.",
                                                buttonTitle: "Play Again")
-            onSuccessFinish?(alertModel)
+            delegate?.quizFinished(alert: alertModel)
+        }
+    }
+    
+    private func handleAPIResponse(quiz: Quiz?, errorMessage: String?) {
+        if let errorMessage = errorMessage {
+            delegate?.quizUpdated(questionTitle: nil,
+                                  words: nil,
+                                  error: (AlertMessageModel(title: "Ops",
+                                                            message: errorMessage,
+                                                            buttonTitle: "Try Again")))
+            
+        } else if let quiz = quiz, let answer = quiz.answer {
+            wordsDataSource = answer
+            delegate?.quizUpdated(questionTitle: quiz.question,
+                                  words: answer,
+                                  error: nil)
+            
+        } else {
+            delegate?.quizUpdated(questionTitle: nil,
+                                  words: nil,
+                                  error: (AlertMessageModel(title: "Ops",
+                                                            message: "Something went wrong",
+                                                            buttonTitle: "Try Again")))
         }
     }
 }
