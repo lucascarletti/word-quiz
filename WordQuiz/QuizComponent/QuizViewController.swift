@@ -35,26 +35,27 @@ class QuizViewController: UIViewController {
     //MARK: - Other outlets
     @IBOutlet var tableView: UITableView! {
         didSet {
-            tableView.delegate = self
             tableView.dataSource = self
             tableView.allowsSelection = false
+            tableView.tableFooterView = UIView()
         }
     }
     
     @IBOutlet var bottomViewConstraint: NSLayoutConstraint!
-        
+    
     //MARK: - Class Variables
     fileprivate lazy var loadingBuilder: LoadingProtocol = {
         let loadingView = LoadingBuilder()
         return loadingView
     }()
     
+    // If this code was supposed to be used in different contexts, this view model could be injected instead of being instanciated here, this would help making this view more reusable.
     fileprivate var viewModel: QuizViewModel? = QuizViewModel()
     
     private static let timeInMinutes: TimeInterval = 5
     
-    private var timer: QuizTimer = QuizTimer(timeLimit: QuizViewController.timeInMinutes * 60)
-
+    private var timer: QuizTimer = QuizTimer(timeLimit: QuizViewModel.timeInMinutes * 60)
+    
     //MARK: - ViewController LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,70 +66,15 @@ class QuizViewController: UIViewController {
         mainContentView.alpha = 0
         
         registerForKeyboardNotifications()
-        registerViewModelCallBacks()
         setupTimer()
-        
-        loadingBuilder.startLoading()
+        setupTextField()
+
+        viewModel?.delegate = self
         viewModel?.initialize()
     }
-
-    private func registerViewModelCallBacks() {
-        viewModel?.onInformationChanged = { [weak self] (questionTitle, words) in
-            DispatchQueue.main.async {
-                self?.questionTitleLabel.text = questionTitle
-                self?.setProgressWith(current: 0, andLimitOf: words.count)
-                self?.mainContentView.alpha = 1
-                self?.loadingBuilder.stopLoading()
-            }
-        }
-        
-        viewModel?.onInformationFailed = { [weak self] alertInfo in
-            DispatchQueue.main.async {
-                self?.showAlert(fromInfo: alertInfo) {
-                    self?.viewModel?.initialize()
-                }
-            }
-        }
-        
-        viewModel?.onHittenWord = { [weak self] (hittenWords, words) in
-            DispatchQueue.main.async {
-                self?.tableView.reloadData()
-                self?.setProgressWith(current: hittenWords.count,
-                                      andLimitOf: words.count)
-                self?.wordsTextField.text = ""
-            }
-        }
-        
-        viewModel?.onQuizStart = { [weak self] in
-            DispatchQueue.main.async {
-                self?.startQuiz()
-            }
-        }
-        
-        viewModel?.onQuizStopped = { [weak self] words in
-            DispatchQueue.main.async {
-                self?.stopQuiz(withLimit: words.count)
-            }
-        }
-        
-        viewModel?.onSuccessFinish = { [weak self] alertInfo in
-            DispatchQueue.main.async {
-                self?.wordsTextField.resignFirstResponder()
-            
-                self?.showAlert(fromInfo: alertInfo) {
-                    self?.viewModel?.shouldChangeQuizState()
-                }
-            }
-        }
-        
-        viewModel?.onFailureFinish = { [weak self] alertInfo in
-            DispatchQueue.main.async {
-                self?.wordsTextField.resignFirstResponder()
-                self?.showAlert(fromInfo: alertInfo) {
-                    self?.viewModel?.shouldChangeQuizState()
-                }
-            }
-        }
+    
+    func setupTextField() {
+        wordsTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
     }
     
     private func setupTimer() {
@@ -146,18 +92,12 @@ class QuizViewController: UIViewController {
         
         setTimer(withMinutes: Int(QuizViewController.timeInMinutes), andSeconds: 0)
     }
-
+    
     @IBAction func didTouchStateManagerButton(_ sender: Any) {
         viewModel?.shouldChangeQuizState()
     }
     
     // MARK: - Private Methods
-    private func startQuiz() {
-        wordsTextField.becomeFirstResponder()
-        stateManagerButton.setTitle("Reset", for: .normal)
-        startTimer()
-    }
-    
     private func stopQuiz(withLimit limit: Int) {
         tableView.reloadData()
         wordsTextField.resignFirstResponder()
@@ -175,19 +115,6 @@ class QuizViewController: UIViewController {
 
 //MARK: - TextField Delegate and Methods
 extension QuizViewController: UITextFieldDelegate {
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        
-        if let text = textField.text, let textRange = Range(range, in: text) {
-            let updatedText = text.replacingCharacters(in: textRange, with: string)
-            let shouldReplace = viewModel?.shouldAllowTextFieldReplacementString(fromText: updatedText) ?? true
-            
-            viewModel?.didUpdateTextField(withText: updatedText)
-            return shouldReplace
-        }
-        
-        return true
-    }
-    
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         return viewModel?.state == .running
     }
@@ -224,11 +151,11 @@ extension QuizViewController: UITableViewDataSource {
 
 
 //MARK: - TableView Delegate
-extension QuizViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
-    }
-}
+//extension QuizViewController: UITableViewDelegate {
+//    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+//        return UIView()
+//    }
+//}
 
 //MARK: - Keyboard Notification's Management
 private extension QuizViewController {
@@ -259,12 +186,76 @@ private extension QuizViewController {
         let duration: TimeInterval = (userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber)?.doubleValue ?? 0
         UIView.animate(withDuration: duration, delay: 0, options: animationCurve, animations: { [weak self] in
             self?.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
     }
     
     @objc func keyboardWillHide(notification: NSNotification) {
         if bottomViewConstraint.constant != 0 {
             bottomViewConstraint.constant = 0
+        }
+    }
+}
+
+// MARK: - Text Field
+extension QuizViewController {
+    @objc func textFieldDidChange(textField: UITextField) {
+        guard let text = textField.text else { return }
+        viewModel?.didUpdateTextField(withText: text)
+    }
+}
+
+extension QuizViewController: QuizViewModelDelegate {
+    func startQuiz() {
+        DispatchQueue.main.async { [weak self] in
+            self?.wordsTextField.becomeFirstResponder()
+            self?.stateManagerButton.setTitle("Reset", for: .normal)
+            self?.startTimer()
+        }
+    }
+    
+    func quizUpdated(questionTitle: String?, words: [String]?, error: AlertMessageModel?) {
+        DispatchQueue.main.async { [weak self] in
+            if let error = error {
+                self?.showAlert(fromInfo: error) { [weak self] in
+                    self?.viewModel?.initialize()
+                }
+                return
+            }
+            
+            guard let words = words else {
+                self?.viewModel?.initialize()
+                return
+            }
+            
+            self?.questionTitleLabel.text = questionTitle
+            self?.mainContentView.alpha = 1
+            self?.setProgressWith(current: 0, andLimitOf: words.count)
+            self?.loadingBuilder.stopLoading()
+        }
+    }
+    
+    func onHittenWord(hittenWords: [String], words: [String]) {
+        DispatchQueue.main.async { [weak self] in
+            
+            self?.tableView.reloadData()
+            self?.setProgressWith(current: hittenWords.count,
+                                  andLimitOf: words.count)
+            self?.wordsTextField.text = ""
+        }
+    }
+    
+    func stopQuiz(wordsCount: Int) {
+        DispatchQueue.main.async { [weak self] in
+            self?.stopQuiz(withLimit: wordsCount)
+        }
+    }
+    
+    func quizFinished(alert: AlertMessageModel) {
+        DispatchQueue.main.async { [weak self] in
+            self?.wordsTextField.resignFirstResponder()
+            self?.showAlert(fromInfo: alert) { [weak self] in
+                self?.viewModel?.shouldChangeQuizState()
+            }
         }
     }
 }
