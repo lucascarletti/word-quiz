@@ -8,7 +8,7 @@ class WordQuizTests: XCTestCase {
         let viewModel = QuizViewModel(service: dataMock)
         XCTAssertTrue(viewModel.hittenWords.count == 0)
         XCTAssertTrue(viewModel.wordsDataSource.count == 0)
-        XCTAssertTrue(viewModel.state == nil)
+        XCTAssertTrue(viewModel.state == .stopped)
     }
     
     func testRunningState() {
@@ -81,7 +81,7 @@ class WordQuizTests: XCTestCase {
         viewModel.initialize()
         
         viewModel.didUpdateTextField(withText: "case")
-        XCTAssertTrue(viewModel.shouldAllowTextFieldReplacementString(fromText: "case"))
+        XCTAssertTrue(viewModel.hittenWords.contains("case"))
     }
 
     func testDataSourceStateFailure() {
@@ -91,23 +91,21 @@ class WordQuizTests: XCTestCase {
         
         XCTAssertTrue(viewModel.hittenWords.isEmpty)
         XCTAssertTrue(viewModel.wordsDataSource.isEmpty)
-        XCTAssertTrue(viewModel.state == nil)
+        XCTAssertTrue(viewModel.state == .stopped)
     }
 }
 
 struct DataMockSuccess: QuizServiceProtocol {
     func getQuestions(endPoint: QuizEndPoint, completion: ((Quiz?, String?) -> Void)?) {
-        let q = Quiz()
-        
-        q.answer = ["abstract",
+        let answer = ["abstract",
                     "assert",
                     "boolean",
                     "break",
                     "byte",
                     "case"]
         
-        q.question = "What are all the answers in java?"
-        
+        let question = "What are all the answers in java?"
+        let q = Quiz(question: question, answer: answer)
         completion?(q, nil)
     }
 }
@@ -117,3 +115,4 @@ struct DataMockFailure: QuizServiceProtocol {
         completion?(nil, "Something Went Wrong")
     }
 }
+
